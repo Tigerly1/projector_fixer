@@ -1,0 +1,8 @@
+version: "Apple Swift version 5.8 (swiftlang-5.8.0.124.2 clang-1403.0.22.11.100)"
+options: "b046dfb35516c1cd085441c763c89d814b8a3ac12fdc7b50a28ecdaff29ab2be"
+build_start_time: [1684175929, 273951000]
+build_end_time: [1684175933, 379497000]
+inputs:
+  "/Users/filippilarek/Desktop/studia/flutter/sensoryczne/macos/Flutter/GeneratedPluginRegistrant.swift": [1684175915, 489951921]
+  "/Users/filippilarek/Desktop/studia/flutter/sensoryczne/macos/Runner/AppDelegate.swift": [1683735221, 0]
+  "/Users/filippilarek/Desktop/studia/flutter/sensoryczne/macos/Runner/MainFlutterWindow.swift": [1683735221, 0]
