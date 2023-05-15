@@ -1,4 +1,4 @@
-# sensoryczne
+# projector fixer
 
 A new Flutter project.
 
