@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:ffi';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
 
 late List<CameraDescription> cameras;
 
@@ -39,8 +43,8 @@ class CameraScreenState extends State<CameraScreen> {
   CameraController? controller;
   Timer? timer;
   static const platform = const MethodChannel('samples.flutter.dev/camera');
-  CameraImage? latestImage;
-
+  late CameraImage latestImage;
+  var isInitialized = false;
   final TextEditingController _ipController = TextEditingController();
   final TextEditingController _portController = TextEditingController();
 
@@ -55,38 +59,61 @@ class CameraScreenState extends State<CameraScreen> {
       print('No camera available');
     } else {
       controller = CameraController(widget.cameras[0], ResolutionPreset.medium);
-
       controller?.initialize().then((_) {
-        if (!mounted) {
-          return;
-        }
-        setState(() {});
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+    
+    
 
-        // Start the image stream and setup the frame sending timer
-        controller?.startImageStream((CameraImage img) {
-          // Nothing to do here, the frames are handled by the timer
-        });
-            print("nie ok");
-
-        timer = Timer.periodic(Duration(milliseconds: 200), (Timer t) {
-          // Send the latest frame
-                      print("ok");
-
-          if (controller!.value.isStreamingImages) {
-            sendLatestFrame();
-          }
-        });
+    if (controller?.value.isInitialized == true) {
+      controller?.startImageStream((simg) { 
+        latestImage = simg;
+        isInitialized = true;
+      }).catchError((e) {
+        print('Error starting image stream: $e');
       });
+
+      timer = Timer.periodic(Duration(milliseconds: 4000), (Timer t) {
+        if (controller!.value.isStreamingImages && isInitialized) {
+              sendLatestFrame(controller!);
+        }
+      });
+    } else {
+      print('Error initializing camera');
+    }
+  }).catchError((e) {
+    print('Error initializing camera: $e');
+  });
     }
   }
 
-  Future<void> sendLatestFrame() async {
+  Future<void> sendLatestFrame(CameraController cnt) async {
+    print("WELL");
+    await cnt.stopImageStream();
+    String pathBase = '${(await getTemporaryDirectory()).path}/${DateTime.now().toIso8601String()}';
+    var imagePath = '$pathBase.png';
+    XFile image = await cnt!.takePicture();
+    image.saveTo(imagePath!);
+    await File(imagePath!).exists();
+     
     // Send the frame data through the platform channel
-    print("kurwa");
-    print(latestImage?.planes[0]);
-    await platform.invokeMethod('sendFrame', latestImage?.planes[0].bytes);
+    // print("XD");
+    // img.Image image = img.Image.fromBytes(width: latestImage.planes[0].bytesPerRow~/4, 
+    //       height: latestImage.height,
+    //        bytes: latestImage.planes[0].bytes.buffer);
+
+    // print("XDD");
+
+    // Uint8List jpeg = Uint8List.fromList(img.encodeJpg(image)); 
+    // print(jpeg);
+    // String s = new String.fromCharCodes(jpeg);
+    // await platform.invokeMethod('sendFrame', <String, dynamic>{
+    //   "jpeg": s,
+    // });
+    await platform.invokeMethod('sendFrame', imagePath);
     // Reset the latest image
-    latestImage = null;
   }
 
   Future<void> _showIPAndPortDialog() async {

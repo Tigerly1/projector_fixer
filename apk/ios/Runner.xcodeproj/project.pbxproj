@@ -172,7 +172,6 @@
 				C4562FA3FF3DF5C3F9DA3AB9 /* Pods-RunnerTests.release.xcconfig */,
 				6C23D10B16293305BB1E5B98 /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -225,8 +224,9 @@
 		97C146E61CF9000F007C117D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				CLASSPREFIX = 2023;
 				LastUpgradeCheck = 1300;
-				ORGANIZATIONNAME = "";
+				ORGANIZATIONNAME = rzutnik.2023;
 				TargetAttributes = {
 					331C80F0294D02FB00263BE5 = {
 						CreatedOnToolsVersion = 14.0;
