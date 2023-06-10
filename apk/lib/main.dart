@@ -42,7 +42,7 @@ class CameraScreen extends StatefulWidget {
 class CameraScreenState extends State<CameraScreen> {
   CameraController? controller;
   Timer? timer;
-  static const platform = const MethodChannel('samples.flutter.dev/camera');
+  static const platform = MethodChannel('samples.flutter.dev/camera');
   late CameraImage latestImage;
   var isInitialized = false;
   final TextEditingController _ipController = TextEditingController();
@@ -68,16 +68,16 @@ class CameraScreenState extends State<CameraScreen> {
     
 
     if (controller?.value.isInitialized == true) {
-      controller?.startImageStream((simg) { 
+      controller?.startImageStream((simg) {
         latestImage = simg;
         isInitialized = true;
       }).catchError((e) {
         print('Error starting image stream: $e');
       });
 
-      timer = Timer.periodic(Duration(milliseconds: 4000), (Timer t) {
+      timer = Timer.periodic(Duration(milliseconds: 3000), (Timer t) async {
         if (controller!.value.isStreamingImages && isInitialized) {
-              sendLatestFrame(controller!);
+          await sendLatestFrame(controller!);
         }
       });
     } else {
@@ -97,24 +97,20 @@ class CameraScreenState extends State<CameraScreen> {
     XFile image = await cnt!.takePicture();
     image.saveTo(imagePath!);
     await File(imagePath!).exists();
-     
-    // Send the frame data through the platform channel
-    // print("XD");
-    // img.Image image = img.Image.fromBytes(width: latestImage.planes[0].bytesPerRow~/4, 
-    //       height: latestImage.height,
-    //        bytes: latestImage.planes[0].bytes.buffer);
 
-    // print("XDD");
+    platform.invokeMethod('sendFrame', imagePath);
 
-    // Uint8List jpeg = Uint8List.fromList(img.encodeJpg(image)); 
-    // print(jpeg);
-    // String s = new String.fromCharCodes(jpeg);
-    // await platform.invokeMethod('sendFrame', <String, dynamic>{
-    //   "jpeg": s,
-    // });
-    await platform.invokeMethod('sendFrame', imagePath);
-    // Reset the latest image
+    // Start the image stream again
+    cnt.startImageStream((simg) {
+      latestImage = simg;
+      isInitialized = true;
+    }).catchError((e) {
+      print('Error restarting image stream: $e');
+    });
   }
+
+// Updated timer
+
 
   Future<void> _showIPAndPortDialog() async {
     return showDialog<void>(

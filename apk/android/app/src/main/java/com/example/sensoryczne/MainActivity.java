@@ -14,13 +14,27 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.util.Log;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.content.Context;
 
+import org.opencv.android.OpenCVLoader;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends FlutterActivity {
     private static final String CHANNEL = "samples.flutter.dev/camera";
+
+    @Override
+    public void onStart(){
+        super.onStart();
+        OpenCVLoader.initDebug();
+    }
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
@@ -36,14 +50,23 @@ public class MainActivity extends FlutterActivity {
                                 if (call.method.equals("sendFrame")) {
                                     String imagePath = (String) call.arguments;  // argumentList is List of Object
 
-//                                    if (argumentList != null) {
-//                                        byte[] byteArray = new byte[argumentList.size()];
-//                                        for (int i = 0; i < argumentList.size(); i++) {
-//                                            Integer byteValue = (Integer) argumentList.get(i);
-//                                            byteArray[i] = byteValue.byteValue();
-//                                        }
 
+
+                                    FileInputStream fis = null;
+                                    try {
+                                        fis = new FileInputStream(new File(imagePath));
+                                    } catch (FileNotFoundException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                    // Decode the FileInputStream to a Bitmap
+                                    Bitmap bitmap = BitmapFactory.decodeStream(fis);
+                                    Log.d("test", "Bitmap width: " + bitmap.getWidth());
+                                    Log.d("test", "Bitmap height: " + bitmap.getHeight());
                                     Log.d("test", imagePath);
+
+                                    Corrector corrector = new Corrector();
+                                    corrector.correct(imagePath);
 
                                 } else {
                                     result.notImplemented();
