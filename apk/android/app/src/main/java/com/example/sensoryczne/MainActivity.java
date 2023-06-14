@@ -66,7 +66,7 @@ public class MainActivity extends FlutterActivity {
                                     Log.d("test", imagePath);
 
                                     Corrector corrector = new Corrector();
-                                    corrector.correct(imagePath);
+                                    double[] serializedMatrix = corrector.correct(imagePath).getDistortionMatrix();
 
                                 } else {
                                     result.notImplemented();

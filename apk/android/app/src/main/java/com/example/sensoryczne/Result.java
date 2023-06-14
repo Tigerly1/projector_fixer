@@ -6,10 +6,13 @@ import android.graphics.PointF;
 
 public class Result {
     private final double[] distortionMatrix;
-    private final PointF[] points;
+//    private final PointF[] points;
 
-    public Result(double[] distortionMatrix, PointF[] points) {
+    public Result(double[] distortionMatrix){//}, PointF[] points) {
         this.distortionMatrix = distortionMatrix;
-        this.points = points;
+//        this.points = points;
+    }
+    public double[] getDistortionMatrix() {
+        return distortionMatrix;
     }
 }

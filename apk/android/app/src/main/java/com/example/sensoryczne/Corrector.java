@@ -25,6 +25,8 @@ import org.opencv.core.Scalar;
 
 import org.opencv.core.CvType;
 
+import com.example.sensoryczne.Result;
+import com.example.sensoryczne.Optimizer;
 
 import android.util.Log;
 
@@ -32,12 +34,16 @@ import android.util.Log;
 public class Corrector {
 
     private final double resize;
+    private final Optimizer optimizer;
+    private final double ratio;
     public Corrector() {
         this(1.0);
     }
 
     public Corrector(double resize){
         this.resize = resize;
+        this.ratio = 3./4.;
+        this.optimizer = new Optimizer(ratio);
     }
     public Result correct(String path) {
         
@@ -132,106 +138,21 @@ public class Corrector {
             }
         }
 
-        // Compute points for perspective transformation (TODO: Adapt this part based on your exact use case)
+
         MatOfPoint biggestContour = contours.get(maxValIdx);
         MatOfPoint2f perspective = new MatOfPoint2f(biggestContour.toArray());
-        MatOfPoint2f innerTarget = new MatOfPoint2f(biggestContour.toArray()); // replace with your desired points
+        MatOfPoint2f innerTarget = optimizer.solveFittingProblem(perspective.toArray());
 
-
-        // Get perspective transform
-        Mat M = Imgproc.getPerspectiveTransform(innerTarget, perspective);
-
-        double[][] doubleArray = matToDoubleArray(M);
-
-        // Print the double array
-        for (int i = 0; i < doubleArray.length; i++) {
-            for (int j = 0; j < doubleArray[0].length; j++) {
-                Log.d("test", doubleArray[i][j] + " ");
-            }
-        }
-        return null;
+        return new Result(serializePerspective(Imgproc.getPerspectiveTransform(innerTarget, perspective)));
     }
-    public static double[][] matToDoubleArray(Mat mat) {
-        int rows = mat.rows();
-        int cols = mat.cols();
-        double[][] result = new double[rows][cols];
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                result[i][j] = mat.get(i, j)[0];
+    public double[] serializePerspective(Mat mat) {
+        double[] result = new double[9];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                result[i*3+j] = mat.get(i, j)[0];
             }
         }
-
         return result;
-    }
-
-    public double[] optimizer(String[] args){
-
-        double[] leftTop = new double[]{1, 2};
-        double[] rightTop = new double[]{3, 4};
-        double[] rightBottom = new double[]{5, 6};
-        double[] leftBottom = new double[]{7, 8};
-        double r = 9;
-
-        double[] ab1 = calculateSlopeIntercept(leftTop, rightTop, true);
-        double[] gk2 = calculateSlopeIntercept(rightTop, rightBottom, false);
-        double[] ab3 = calculateSlopeIntercept(leftBottom, rightBottom, true);
-        double[] gk4 = calculateSlopeIntercept(leftTop, leftBottom, false);
-
-        double[][] matrixData = {
-                {-ab1[0], 1, 0},
-                {-ab1[0], 1, -ab1[0]},
-                {ab3[0], -1, r},
-                {ab3[0], -1, ab3[0]+r},
-                {1, -gk2[0], 1},
-                {1, -gk2[0], 1+r*gk2[0]},
-                {-1, gk4[0], 0},
-                {-1, gk4[0], -r*gk4[0]}
-        };
-
-        double[] b = {
-                ab1[1],
-                ab1[1],
-                -ab3[1],
-                -ab3[1],
-                gk2[1],
-                gk2[1],
-                -gk4[1],
-                -gk4[1]
-        };
-
-        double[] c = {0, 0, -1};
-
-        return solveLP(matrixData, b, c);
-
-
-    }
-
-    private static double[] calculateSlopeIntercept(double[] point1, double[] point2, boolean xToY) {
-        double slope;
-        double intercept;
-
-        if (xToY) {
-            slope = (point2[1] - point1[1]) / (point2[0] - point1[0]);
-            intercept = point1[1] - slope * point1[0];
-        } else {
-            slope = (point2[0] - point1[0]) / (point2[1] - point1[1]);
-            intercept = point1[0] - slope * point1[1];
-        }
-
-        return new double[]{slope, intercept};
-    }
-
-    private static double[] solveLP(double[][] matrixData, double[] b, double[] c) {
-        ArrayList<LinearConstraint> constraints = new ArrayList<>();
-        for (int i = 0; i < matrixData.length; i++) {
-            constraints.add(new LinearConstraint(matrixData[i], Relationship.LEQ, b[i]));
-        }
-
-        LinearObjectiveFunction f = new LinearObjectiveFunction(c, 0);
-        LinearOptimizer optimizer = new SimplexSolver();
-        PointValuePair solution = optimizer.optimize(new MaxIter(100), f, new LinearConstraintSet(constraints), GoalType.MINIMIZE, new NonNegativeConstraint(true));
-        System.out.println(Arrays.toString(solution.getPoint()));
-        return solution.getPoint();
     }
 }
