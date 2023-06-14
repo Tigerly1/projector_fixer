@@ -139,8 +139,33 @@ public class Corrector {
         }
 
 
+
+
         MatOfPoint biggestContour = contours.get(maxValIdx);
-        MatOfPoint2f perspective = new MatOfPoint2f(biggestContour.toArray());
+        // for points in biggest contour
+        // find top left, top right, bottom left, bottom right
+        Point topLeft = new Point(Double.MAX_VALUE, Double.MAX_VALUE);
+        Point topRight = new Point(Double.MIN_VALUE, Double.MAX_VALUE);
+        Point bottomLeft = new Point(Double.MAX_VALUE, Double.MIN_VALUE);
+        Point bottomRight = new Point(Double.MIN_VALUE, Double.MIN_VALUE);
+
+        for (Point point : biggestContour.toArray()) {
+            if (point.x + point.y < topLeft.x + topLeft.y) {
+                topLeft = point;
+            }
+            if (point.x - point.y > topRight.x - topRight.y) {
+                topRight = point;
+            }
+            if (point.x - point.y < bottomLeft.x - bottomLeft.y) {
+                bottomLeft = point;
+            }
+            if (point.x + point.y > bottomRight.x + bottomRight.y) {
+                bottomRight = point;
+            }
+        }
+
+
+        MatOfPoint2f perspective = new MatOfPoint2f(topLeft, topRight, bottomLeft, bottomRight);
         MatOfPoint2f innerTarget = optimizer.solveFittingProblem(perspective.toArray());
 
         return new Result(serializePerspective(Imgproc.getPerspectiveTransform(innerTarget, perspective)));
