@@ -165,7 +165,7 @@ public class Corrector {
         }
 
 
-        MatOfPoint2f perspective = new MatOfPoint2f(topLeft, topRight, bottomLeft, bottomRight);
+        MatOfPoint2f perspective = new MatOfPoint2f(topLeft, topRight, bottomRight, bottomLeft);
         MatOfPoint2f innerTarget = optimizer.solveFittingProblem(perspective.toArray());
 
         return new Result(serializePerspective(Imgproc.getPerspectiveTransform(innerTarget, perspective)));
