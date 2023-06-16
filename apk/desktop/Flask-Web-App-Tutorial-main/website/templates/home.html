@@ -1,0 +1,31 @@
+{% extends "base.html" %} {% block title %}Home{% endblock %} {% block content %}
+    <style>
+    .buttons{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 30px;
+    }
+    .images{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 30px;
+    }
+    </style>
+<h1 align="center">App for projector perspective correction</h1>
+    <div class="buttons">
+        <button type="submit" class="btn btn-primary" onclick="window.location.href='{{ url_for( 'views.display_test_image') }}'">Display test image</button>
+        <button type="submit" class="btn btn-primary" onclick="window.location.href='{{ url_for( 'views.refresh_photos') }}'">Refresh received photos</button>
+        <button type="submit" class="btn btn-primary" onclick="window.location.href='{{ url_for( 'views.calculate_parameters') }}'">Calculate model parameters</button>
+        <button type="submit" class="btn btn-primary" onclick="window.location.href='{{ url_for( 'views.share_screen') }}'">Share screen</button>
+    </div>
+
+    <div class="images">
+        <img src="{{ image1 }}" alt="image1">
+        <img src="{{ image2 }}" alt="image2">
+    </div>
+
+</div>
+
+{% endblock %}
