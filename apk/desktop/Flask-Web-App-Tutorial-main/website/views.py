@@ -61,11 +61,14 @@ def share_screen():
     print("Sharing screen")
     screen_width, screen_height = pyautogui.size()
     resolution = (screen_width, screen_height)
-    cv2.namedWindow("Live", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("Live", 480, 270)
+    cv2.namedWindow("Live", cv2.WND_PROP_FULLSCREEN)
+    cv2.setWindowProperty("Live", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    # cv2.resizeWindow("Live", 2160, 3840)
+    cv2.moveWindow("Live", screen_width, 0)
     while True:
         img = pyautogui.screenshot()
         frame = np.array(img)
+        # frame = cv2.resize(frame, (3840, 2160))
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         cv2.imshow('Live', frame)
         if cv2.waitKey(1) == ord('q'):
