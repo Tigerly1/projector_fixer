@@ -22,7 +22,11 @@ def home():
 @views.route('/display_test_image')
 def display_test_image():
     print("Displaying test image")
-    cv2.namedWindow("Live", cv2.WINDOW_NORMAL)
+    screen_width, screen_height = pyautogui.size()
+    cv2.namedWindow("Live", cv2.WND_PROP_FULLSCREEN)
+    cv2.setWindowProperty("Live", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    # cv2.resizeWindow("Live", 2160, 3840)
+    cv2.moveWindow("Live", screen_width, 0)
     frame = np.zeros((2160, 3840, 3))
     frame[:, :, 1] = np.ones((2160, 3840)) * 255
     cv2.imshow('Live', frame)
@@ -56,20 +60,30 @@ def calculate_parameters():
 
 
 # function to share screen in another window
+# function to share screen in another window
 @views.route('/share_screen')
 def share_screen():
     print("Sharing screen")
+    # M = np.array([[4.6656708905268225, 0.962262589782765, -1416.3209959113651], [-1.2595302756020346, -2.96466686073545, 2505.0071003838325], [0.0012798618451005134, 0.002215097207902191, 1.0]])
+    M = np.array([[0.5, 0.0, 0.0],
+                       [0.0, 0.3, 0.0],
+                       [0.0, 0.0, 0.7]])
     screen_width, screen_height = pyautogui.size()
     resolution = (screen_width, screen_height)
     cv2.namedWindow("Live", cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty("Live", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     # cv2.resizeWindow("Live", 2160, 3840)
     cv2.moveWindow("Live", screen_width, 0)
+    x=0
     while True:
         img = pyautogui.screenshot()
         frame = np.array(img)
         # frame = cv2.resize(frame, (3840, 2160))
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.warpPerspective(frame, M, (frame.shape[1], frame.shape[0]))
+        if x==0:
+            cv2.imwrite('website/static/ex.jpg', frame)
+            x=1
         cv2.imshow('Live', frame)
         if cv2.waitKey(1) == ord('q'):
             break
