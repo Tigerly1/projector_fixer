@@ -8,6 +8,8 @@ import glob
 import shutil
 import os
 
+from website.params import ParamsSaver
+
 views = Blueprint('views', __name__)
 
 
@@ -68,6 +70,11 @@ def share_screen():
     M = np.array([[0.5, 0.0, 0.0],
                        [0.0, 0.3, 0.0],
                        [0.0, 0.0, 0.7]])
+    
+    params_saver = ParamsSaver()
+    params = params_saver.get_value()
+    if params is not None:
+        M = np.array(params)
     screen_width, screen_height = pyautogui.size()
     resolution = (screen_width, screen_height)
     cv2.namedWindow("Live", cv2.WND_PROP_FULLSCREEN)

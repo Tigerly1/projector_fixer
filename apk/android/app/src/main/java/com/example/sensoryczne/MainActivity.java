@@ -81,7 +81,7 @@ public class MainActivity extends FlutterActivity {
                                             .correct(imagePath)
                                             .getDistortionMatrix();
                                     Log.d("test", "Serialized matrix: " + Arrays.toString(serializedMatrix));
-
+                                    result.success(serializedMatrix);
                                 } else {
                                     result.notImplemented();
                                 }

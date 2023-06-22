@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sensoryczne/network/connection.dart';
 
 
 late List<CameraDescription> cameras;
@@ -47,8 +48,11 @@ class CameraScreenState extends State<CameraScreen> {
   static const platform = MethodChannel('samples.flutter.dev/camera');
   late CameraImage latestImage;
   var isInitialized = false;
+  BuildContext? dialogContext;
   final TextEditingController _ipController = TextEditingController();
   final TextEditingController _portController = TextEditingController();
+  var ip = "10.0.2.2";
+  var port = "5000";
 
   @override
   void initState() {
@@ -78,7 +82,7 @@ class CameraScreenState extends State<CameraScreen> {
         print('Error starting image stream: $e');
       });
 
-      timer = Timer.periodic(Duration(milliseconds: 3000), (Timer t) async {
+      timer = Timer.periodic(Duration(milliseconds: 5000), (Timer t) async {
         if (controller!.value.isStreamingImages && isInitialized) {
           await sendLatestFrame(controller!);
         }
@@ -107,8 +111,17 @@ class CameraScreenState extends State<CameraScreen> {
     image.saveTo(imagePath!);
     await File(imagePath!).exists();
 
-    platform.invokeMethod('sendFrame', imagePath);
-
+    final List<dynamic> result =  await platform.invokeMethod('sendFrame', imagePath);
+    List<double> array = result.cast<double>();
+    print(array);
+    int isConnected = await sendData(array, ip ,port);
+    if(isConnected == 1){
+      if(dialogContext != null) {
+        Navigator.of(dialogContext!).pop();
+        showOverlay(context, 'Connected successfully');
+        dialogContext = null;
+      }
+    }
     // Start the image stream again
     cnt.startImageStream((simg) {
       latestImage = simg;
@@ -120,12 +133,46 @@ class CameraScreenState extends State<CameraScreen> {
 
 // Updated timer
 
+  void showOverlay(BuildContext context, String message) {
+    OverlayState overlayState = Overlay.of(context)!;
+    OverlayEntry overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        bottom: 50.0,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            alignment: Alignment.center,
+            width: MediaQuery.of(context).size.width,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                message,
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlayState.insert(overlayEntry);
+
+    // Remove the overlay entry after 4 seconds.
+    Future.delayed(Duration(seconds: 4)).then((value) => overlayEntry.remove());
+  }
+
 
   Future<void> _showIPAndPortDialog() async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
+        dialogContext = context;
         return AlertDialog(
           title: Text('Enter IP and Port'),
           content: SingleChildScrollView(
@@ -134,13 +181,15 @@ class CameraScreenState extends State<CameraScreen> {
                 TextFormField(
                   controller: _ipController,
                   decoration: InputDecoration(
-                    hintText: 'Enter IP',
+                    hintText: 'Enter local pc ip',
+                    labelText: "10.0.2.2"
                   ),
                 ),
                 TextFormField(
                   controller: _portController,
                   decoration: InputDecoration(
                     hintText: 'Enter Port',
+                      labelText: "5000"
                   ),
                 ),
               ],
@@ -150,7 +199,9 @@ class CameraScreenState extends State<CameraScreen> {
             TextButton(
               child: Text('Submit'),
               onPressed: () {
-                Navigator.of(context).pop();
+                //Navigator.of(context).pop();
+                ip = _ipController.text;
+                port = _portController.text;
                 // Here you can use _ipController.text and _portController.text to get IP and Port values
               },
             ),

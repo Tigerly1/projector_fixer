@@ -38,7 +38,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   image: ^4.0.17
   permission_handler: any
-
+  http: ^0.13.3
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
