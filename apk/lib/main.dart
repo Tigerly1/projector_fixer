@@ -6,6 +6,8 @@ import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 late List<CameraDescription> cameras;
 
@@ -51,6 +53,7 @@ class CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
+    _requestPermission();
      WidgetsBinding.instance.addPostFrameCallback((_) {
       _showIPAndPortDialog();
     });
@@ -86,6 +89,12 @@ class CameraScreenState extends State<CameraScreen> {
   }).catchError((e) {
     print('Error initializing camera: $e');
   });
+    }
+  }
+  _requestPermission() async {
+    if (await Permission.storage.request().isGranted) {
+      // Either the permission was already granted before or the user just granted it.
+      print('Storage permission granted');
     }
   }
 

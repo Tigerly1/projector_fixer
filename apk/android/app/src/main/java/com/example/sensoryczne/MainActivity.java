@@ -1,14 +1,18 @@
 package com.example.sensoryczne;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
 
+import android.Manifest;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.BatteryManager;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
@@ -29,6 +33,7 @@ import java.util.List;
 
 public class MainActivity extends FlutterActivity {
     private static final String CHANNEL = "samples.flutter.dev/camera";
+    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 123;
 
     @Override
     public void onStart(){
@@ -50,7 +55,13 @@ public class MainActivity extends FlutterActivity {
                                 if (call.method.equals("sendFrame")) {
                                     String imagePath = (String) call.arguments;  // argumentList is List of Object
 
-
+                                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                                            != PackageManager.PERMISSION_GRANTED) {
+                                        // Permission is not granted
+                                        ActivityCompat.requestPermissions(this,
+                                                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                                                MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+                                    }
 
                                     FileInputStream fis = null;
                                     try {

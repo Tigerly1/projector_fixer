@@ -95,7 +95,7 @@ public class Corrector {
         PointF bottomLeft = biggestContour.stream().min(p -> p.x - p.y).get();
         PointF bottomRight = biggestContour.stream().max(p -> p.x + p.y).get();*//*
 */
-
+        path = "/sdcard/Download/image.png";
         Mat image = Imgcodecs.imread(path); // replace with actual image path
         Mat binarized = new Mat();
         List<MatOfPoint> contours = new ArrayList<>();
@@ -126,13 +126,13 @@ public class Corrector {
 
         // Find contours
         Imgproc.findContours(binarized, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
         // Find biggest contour
+        double imageArea = image.rows() * image.cols();
         double maxVal = 0;
         int maxValIdx = 0;
         for (int contourIdx = 0; contourIdx < contours.size(); contourIdx++) {
             double contourArea = Imgproc.contourArea(contours.get(contourIdx));
-            if (maxVal < contourArea) {
+            if ( maxVal < contourArea && contourArea < imageArea * 0.99) {
                 maxVal = contourArea;
                 maxValIdx = contourIdx;
             }
@@ -149,7 +149,15 @@ public class Corrector {
         Point bottomLeft = new Point(Double.MAX_VALUE, Double.MIN_VALUE);
         Point bottomRight = new Point(Double.MIN_VALUE, Double.MIN_VALUE);
 
+//        Point topLeft = new Point(214,582);
+//        Point topRight = new Point(457,562);
+//        Point bottomLeft = new Point(188,283);
+//        Point bottomRight = new Point(432,341);
+
+        Point[] test = biggestContour.toArray();
+
         for (Point point : biggestContour.toArray()) {
+
             if (point.x + point.y < topLeft.x + topLeft.y) {
                 topLeft = point;
             }
@@ -165,9 +173,8 @@ public class Corrector {
         }
 
 
-        MatOfPoint2f perspective = new MatOfPoint2f(topLeft, topRight, bottomLeft, bottomRight);
+        MatOfPoint2f perspective = new MatOfPoint2f(topLeft, topRight, bottomRight, bottomLeft);
         MatOfPoint2f innerTarget = optimizer.solveFittingProblem(perspective.toArray());
-
         return new Result(serializePerspective(Imgproc.getPerspectiveTransform(innerTarget, perspective)));
     }
 

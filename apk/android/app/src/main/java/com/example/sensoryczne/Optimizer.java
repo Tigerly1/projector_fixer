@@ -1,6 +1,8 @@
 package com.example.sensoryczne;
 
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,16 +26,17 @@ import org.opencv.core.Point;
 
 class Optimizer {
     private final double r;
+
     public Optimizer(double ratio) {
         this.r = ratio;
     }
 
-    public MatOfPoint2f solveFittingProblem(Point[] points){
+    public MatOfPoint2f solveFittingProblem(Point[] points) {
 
-        double[] leftTop = new double[]{points[0].x, points[0].y};
-        double[] rightTop = new double[]{points[1].x, points[1].y};
-        double[] rightBottom = new double[]{points[2].x, points[2].y};
-        double[] leftBottom = new double[]{points[3].x, points[3].y};
+        double[] leftBottom = new double[]{points[0].x, points[0].y};
+        double[] rightBottom = new double[]{points[1].x, points[1].y};
+        double[] rightTop = new double[]{points[2].x, points[2].y};
+        double[] leftTop = new double[]{points[3].x, points[3].y};
 
         double[] ab1 = calculateSlopeIntercept(leftTop, rightTop, true);
         double[] gk2 = calculateSlopeIntercept(rightTop, rightBottom, false);
@@ -44,11 +47,11 @@ class Optimizer {
                 {-ab1[0], 1, 0},
                 {-ab1[0], 1, -ab1[0]},
                 {ab3[0], -1, r},
-                {ab3[0], -1, ab3[0]+r},
+                {ab3[0], -1, ab3[0] + r},
                 {1, -gk2[0], 1},
-                {1, -gk2[0], 1+r*gk2[0]},
+                {1, -gk2[0], 1 + r * gk2[0]},
                 {-1, gk4[0], 0},
-                {-1, gk4[0], -r*gk4[0]}
+                {-1, gk4[0], -r * gk4[0]}
         };
 
         double[] b = {
@@ -64,16 +67,22 @@ class Optimizer {
 
         double[] c = {0, 0, -1};
 
-        double[] result =  solveLP(A, b, c);
+        double[] result = solveLP(A, b, c);
+
         double l = result[0];
         double t = result[1];
         double w = result[2];
 
+        Log.d("test", String.valueOf(l));
+        Log.d("test", String.valueOf(t));
+
+        Log.d("test", String.valueOf(w));
+
         return new MatOfPoint2f(
-                new Point(l,t),
-                new Point(l+w,t),
-                new Point(l+w, t-r*w),
-                new Point(l, t-r*w)
+                new Point(l, t),
+                new Point(l + w, t),
+                new Point(l + w, t - r * w),
+                new Point(l, t - r * w)
         );
     }
 
@@ -94,13 +103,14 @@ class Optimizer {
 
     private double[] solveLP(double[][] A, double[] b, double[] c) {
         ArrayList<LinearConstraint> constraints = new ArrayList<>();
+        //Log.d()
         for (int i = 0; i < A.length; i++) {
             constraints.add(new LinearConstraint(A[i], Relationship.LEQ, b[i]));
         }
 
         LinearObjectiveFunction f = new LinearObjectiveFunction(c, 0);
         LinearOptimizer optimizer = new SimplexSolver();
-        PointValuePair solution = optimizer.optimize(new MaxIter(100), f, new LinearConstraintSet(constraints), GoalType.MINIMIZE, new NonNegativeConstraint(true));
+        PointValuePair solution = optimizer.optimize(new MaxIter(10000), f, new LinearConstraintSet(constraints), GoalType.MINIMIZE, new NonNegativeConstraint(true));
         return solution.getPoint();
     }
 
